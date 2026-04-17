@@ -53,6 +53,24 @@ body {
     0 0 60px rgba(62, 168, 255, 0.35),
     inset 0 0 40px rgba(138, 92, 246, 0.2);
   border: 1px solid rgba(62, 168, 255, 0.45);
+  overflow: hidden;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+#stage-inner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 960px;
+  height: 640px;
 }
 
 #world {
@@ -847,15 +865,16 @@ button:active:not(:disabled),
    TOUCH CONTROLS (joystick + interact button)
    ========================================================== */
 #touch-controls {
-  position: fixed;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
   pointer-events: none;
   z-index: 20;
 }
 
 #touch-controls.hidden { display: none !important; }
 
-body.modal-open #touch-controls { display: none; }
+body.modal-open #touch-controls { visibility: hidden; }
 
 #joystick {
   position: fixed;
@@ -939,54 +958,98 @@ body.modal-open #touch-controls { display: none; }
 }
 
 /* ==========================================================
-   ROTATE-TO-LANDSCAPE OVERLAY
+   TOUCH-DEVICE LAYOUT (portrait-first)
+   HUD becomes a header row above the game, touch controls
+   become a dedicated strip below the game, and the game itself
+   expands to fill the space between. Nothing overlaps.
    ========================================================== */
-#rotate-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, #0a1428 0%, #03040a 80%);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  text-align: center;
-}
+@media (pointer: coarse) {
+  body {
+    align-items: stretch;
+    justify-content: flex-start;
+    flex-direction: column;
+  }
 
-.rotate-inner {
-  max-width: 280px;
-}
+  #game {
+    width: 100vw;
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    /* Scale applies to the inner stage on mobile so HUD and controls keep
+       their native size. */
+    transform: none;
+  }
 
-.rotate-icon {
-  font-size: 64px;
-  color: var(--blue);
-  text-shadow: 0 0 18px var(--blue-glow);
-  animation: rotateSpin 2s infinite linear;
-  margin-bottom: 18px;
-}
+  #stage-inner {
+    transform: scale(var(--game-scale, 1));
+    transform-origin: center center;
+  }
 
-@keyframes rotateSpin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
+  #hud {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    background: linear-gradient(180deg, rgba(10, 15, 31, 0.95), rgba(5, 8, 20, 0.7));
+    border-bottom: 1px solid rgba(62, 168, 255, 0.25);
+    font-size: 13px;
+    z-index: 2;
+  }
 
-.rotate-title {
-  color: var(--blue);
-  letter-spacing: 3px;
-  font-weight: 600;
-  text-shadow: 0 0 10px var(--blue-glow);
-  margin-bottom: 10px;
-}
+  #menu-btn, #mute-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
 
-.rotate-text {
-  color: #9cb3d8;
-  font-size: 14px;
-  letter-spacing: 1px;
-  line-height: 1.5;
-}
+  /* Interact button already shows the target label on touch, so the in-canvas
+     hint is redundant. */
+  #hint { display: none !important; }
 
-@media (orientation: portrait) and (max-width: 640px) and (pointer: coarse) {
-  #rotate-overlay { display: flex; }
+  #stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #080a14;
+  }
+
+  /* Drop the in-canvas frame styling on mobile — the canvas just is the
+     playable area and the frame is provided by body/header/controls. */
+  #stage-inner { background: transparent; }
+
+  #notifications {
+    top: 64px;
+    right: 10px;
+    max-width: 60vw;
+  }
+
+  #touch-controls {
+    width: 100vw;
+    height: calc(180px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: linear-gradient(180deg, rgba(5, 8, 20, 0.6), rgba(10, 15, 31, 0.95));
+    border-top: 1px solid rgba(62, 168, 255, 0.25);
+    z-index: 20;
+  }
+
+  /* Joystick and interact live inside the bottom strip, not over the game. */
+  #joystick {
+    position: absolute;
+    left: calc(20px + env(safe-area-inset-left, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    top: auto;
+  }
+
+  #touch-interact {
+    position: absolute;
+    right: calc(20px + env(safe-area-inset-right, 0px));
+    bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    top: auto;
+  }
 }
 
 /* ==========================================================
@@ -1045,20 +1108,6 @@ body.modal-open #touch-controls { display: none; }
   .menu-buttons { max-width: 100%; }
 }
 
-/* Touch devices get bigger HUD buttons regardless of width */
-@media (pointer: coarse) {
-  #menu-btn, #mute-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
-  }
-
-  #hud { font-size: 13px; padding: 8px 10px; }
-
-  /* On touch, the interact button shows the target label, so the scaled
-     in-game hint becomes redundant and visually cramped. */
-  #hint { display: none !important; }
-}
 
 /* ==========================================================
    SHORT VIEWPORTS (landscape phones, ~<= 520px tall)

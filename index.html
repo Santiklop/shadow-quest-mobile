@@ -10,10 +10,6 @@
 </head>
 <body>
   <div id="game">
-    <canvas id="world" width="960" height="640"></canvas>
-
-    <div id="sprite-layer" aria-hidden="true"></div>
-
     <div id="hud">
       <div id="title">&#x2694;&#xFE0F; SHADOW QUEST</div>
       <div id="hud-right">
@@ -23,7 +19,13 @@
       </div>
     </div>
 
-    <div id="hint" class="hidden">[ SPACE ] Interact</div>
+    <div id="stage">
+      <div id="stage-inner">
+        <canvas id="world" width="960" height="640"></canvas>
+        <div id="sprite-layer" aria-hidden="true"></div>
+        <div id="hint" class="hidden">[ SPACE ] Interact</div>
+      </div>
+    </div>
 
     <div id="notifications"></div>
   </div>
@@ -36,14 +38,6 @@
       <span class="ti-icon">&#x2726;</span>
       <span class="ti-label">TAP</span>
     </button>
-  </div>
-
-  <div id="rotate-overlay">
-    <div class="rotate-inner">
-      <div class="rotate-icon">&#x21BB;</div>
-      <div class="rotate-title">ROTATE YOUR DEVICE</div>
-      <div class="rotate-text">Shadow Quest plays best in landscape.</div>
-    </div>
   </div>
 
   <div id="overlay" class="hidden">

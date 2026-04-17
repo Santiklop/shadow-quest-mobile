@@ -665,12 +665,28 @@
     deadzone: 0.18,
   };
 
+  const stageEl = document.getElementById('stage');
+
   function fitGameToViewport() {
-    const sx = window.innerWidth / W;
-    const sy = window.innerHeight / H;
-    // On touch devices we allow scaling up past 1 so phones/tablets fill the screen.
-    // On desktop we cap at 1 to preserve the original authored size.
-    const s = isTouchDevice ? Math.min(sx, sy) : Math.min(sx, sy, 1);
+    let availW, availH, s;
+    if (isTouchDevice) {
+      // On mobile the scale is applied to #stage-inner, so we measure the
+      // #stage slot (which is the space left after HUD and touch-controls).
+      const rect = stageEl.getBoundingClientRect();
+      availW = rect.width;
+      availH = rect.height;
+      if (availW < 10 || availH < 10) {
+        requestAnimationFrame(fitGameToViewport);
+        return;
+      }
+      s = Math.min(availW / W, availH / H);
+    } else {
+      // On desktop the scale is applied to the whole #game box, so we fit to
+      // the viewport (capped at 1 to preserve the authored 960x640 layout).
+      availW = window.innerWidth;
+      availH = window.innerHeight;
+      s = Math.min(availW / W, availH / H, 1);
+    }
     document.documentElement.style.setProperty('--game-scale', String(s));
   }
   window.addEventListener('resize', fitGameToViewport);
