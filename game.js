@@ -546,6 +546,130 @@
   });
 
   // ==========================================================
+  // MOBILE / TOUCH
+  // ==========================================================
+  const isTouchDevice = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+    || ('ontouchstart' in window);
+
+  const joystick = {
+    active: false,
+    id: null,
+    cx: 0,
+    cy: 0,
+    dx: 0,
+    dy: 0,
+    maxRadius: 56,
+    deadzone: 0.18,
+  };
+
+  function fitGameToViewport() {
+    const sx = window.innerWidth / W;
+    const sy = window.innerHeight / H;
+    // On touch devices we allow scaling up past 1 so phones/tablets fill the screen.
+    // On desktop we cap at 1 to preserve the original authored size.
+    const s = isTouchDevice ? Math.min(sx, sy) : Math.min(sx, sy, 1);
+    document.documentElement.style.setProperty('--game-scale', String(s));
+  }
+  window.addEventListener('resize', fitGameToViewport);
+  window.addEventListener('orientationchange', fitGameToViewport);
+  fitGameToViewport();
+
+  if (isTouchDevice) {
+    document.getElementById('touch-controls').classList.remove('hidden');
+    document.body.classList.add('touch-device');
+
+    const joyEl = document.getElementById('joystick');
+    const knobEl = document.getElementById('joystick-knob');
+    const interactEl = document.getElementById('touch-interact');
+
+    function setKnob(dx, dy) {
+      knobEl.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+    }
+
+    function updateJoystickFromTouch(x, y) {
+      let dx = x - joystick.cx;
+      let dy = y - joystick.cy;
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      if (mag > joystick.maxRadius) {
+        dx = (dx / mag) * joystick.maxRadius;
+        dy = (dy / mag) * joystick.maxRadius;
+      }
+      setKnob(dx, dy);
+      let nx = dx / joystick.maxRadius;
+      let ny = dy / joystick.maxRadius;
+      const nmag = Math.sqrt(nx * nx + ny * ny);
+      if (nmag < joystick.deadzone) { nx = 0; ny = 0; }
+      joystick.dx = nx;
+      joystick.dy = ny;
+    }
+
+    joyEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      maybeStartAudio();
+      if (joystick.active) return;
+      const t = e.changedTouches[0];
+      const r = joyEl.getBoundingClientRect();
+      joystick.active = true;
+      joystick.id = t.identifier;
+      joystick.cx = r.left + r.width / 2;
+      joystick.cy = r.top + r.height / 2;
+      updateJoystickFromTouch(t.clientX, t.clientY);
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!joystick.active) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === joystick.id) {
+          updateJoystickFromTouch(t.clientX, t.clientY);
+          e.preventDefault();
+          break;
+        }
+      }
+    }, { passive: false });
+
+    function endJoystickTouch(e) {
+      if (!joystick.active) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === joystick.id) {
+          joystick.active = false;
+          joystick.id = null;
+          joystick.dx = 0;
+          joystick.dy = 0;
+          setKnob(0, 0);
+          break;
+        }
+      }
+    }
+    window.addEventListener('touchend', endJoystickTouch);
+    window.addEventListener('touchcancel', endJoystickTouch);
+
+    interactEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      maybeStartAudio();
+      if (state.modalOpen || !state.near) return;
+      openInteraction(state.near);
+    });
+  }
+
+  function updateTouchInteractButton() {
+    if (!isTouchDevice) return;
+    const el = document.getElementById('touch-interact');
+    if (!el) return;
+    const label = el.querySelector('.ti-label');
+    if (state.near && !state.modalOpen) {
+      el.classList.add('active');
+      if (label) label.textContent = state.near.label.length > 14
+        ? state.near.label.slice(0, 13) + '\u2026'
+        : state.near.label;
+    } else {
+      el.classList.remove('active');
+      if (label) label.textContent = 'TAP';
+    }
+  }
+
+  // ==========================================================
   // MOVEMENT
   // ==========================================================
   function updatePlayer() {
@@ -555,7 +679,14 @@
     if (state.keys['arrowright'] || state.keys['d']) dx += 1;
     if (state.keys['arrowup']    || state.keys['w']) dy -= 1;
     if (state.keys['arrowdown']  || state.keys['s']) dy += 1;
-    if (dx && dy) { dx *= 0.7071; dy *= 0.7071; }
+
+    if (joystick.active && (joystick.dx || joystick.dy)) {
+      dx = joystick.dx;
+      dy = joystick.dy;
+    } else if (dx && dy) {
+      dx *= 0.7071; dy *= 0.7071;
+    }
+
     player.x = clamp(player.x + dx * player.speed, 40, W - 40);
     player.y = clamp(player.y + dy * player.speed, 60, H - 40);
 
@@ -599,11 +730,14 @@
     }
 
     if (state.near) {
-      hintEl.textContent = '[ SPACE ]  ' + state.near.label;
+      const prefix = isTouchDevice ? 'TAP  ' : '[ SPACE ]  ';
+      hintEl.textContent = prefix + state.near.label;
       hintEl.classList.remove('hidden');
     } else {
       hintEl.classList.add('hidden');
     }
+
+    updateTouchInteractButton();
   }
 
   // ==========================================================
@@ -1182,12 +1316,24 @@
   function openModal(id) {
     state.modalOpen = true;
     overlay.classList.remove('hidden');
+    document.body.classList.add('modal-open');
     Object.values(panels).forEach(p => p.classList.add('hidden'));
     panels[id].classList.remove('hidden');
+    // Release any in-flight joystick touch so the player doesn't keep sliding
+    // after opening a puzzle modal.
+    if (joystick.active) {
+      joystick.active = false;
+      joystick.id = null;
+      joystick.dx = 0;
+      joystick.dy = 0;
+      const knob = document.getElementById('joystick-knob');
+      if (knob) knob.style.transform = 'translate(0, 0)';
+    }
   }
   function closeModal() {
     state.modalOpen = false;
     overlay.classList.add('hidden');
+    document.body.classList.remove('modal-open');
     audio.setMusicVolume(0.22); // restore BGM if it was ducked
   }
   document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', () => { audio.click(); closeModal(); }));

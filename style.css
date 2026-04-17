@@ -180,13 +180,16 @@ body {
 }
 
 #overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(2px);
+  padding: 16px;
+  z-index: 50;
+  overflow-y: auto;
 }
 
 .panel {
@@ -759,4 +762,246 @@ button:disabled, .shop-item:disabled {
   filter: drop-shadow(0 0 22px var(--gold));
   margin: 6px 0;
   animation: bossPulse 2s infinite alternate;
+}
+
+/* ==========================================================
+   TOUCH ACTIVE STATES (mirrors :hover for mobile feedback)
+   ========================================================== */
+button:active:not(:disabled),
+.shop-item:active:not(:disabled),
+.seq-buttons button:active:not(:disabled),
+.seer-options button:active:not(:disabled),
+.circuit-rune:active:not(:disabled),
+.sigil-btn:active:not(:disabled) {
+  background: rgba(62, 168, 255, 0.35);
+  box-shadow: 0 0 18px rgba(62, 168, 255, 0.7);
+  color: #fff;
+}
+
+#menu-btn:active, #mute-btn:active {
+  background: rgba(62, 168, 255, 0.35);
+  box-shadow: 0 0 14px var(--blue-glow);
+  color: #fff;
+}
+
+.mem-tile:active:not(.matched):not(.flipped) {
+  border-color: var(--blue);
+  box-shadow: 0 0 10px rgba(62, 168, 255, 0.4);
+}
+
+/* ==========================================================
+   TOUCH CONTROLS (joystick + interact button)
+   ========================================================== */
+#touch-controls {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#touch-controls.hidden { display: none !important; }
+
+body.modal-open #touch-controls { display: none; }
+
+#joystick {
+  position: fixed;
+  left: calc(20px + env(safe-area-inset-left, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(10, 15, 31, 0.55);
+  border: 2px solid rgba(62, 168, 255, 0.55);
+  box-shadow: 0 0 22px rgba(62, 168, 255, 0.35), inset 0 0 18px rgba(62, 168, 255, 0.15);
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(62, 168, 255, 0.9), rgba(62, 168, 255, 0.5));
+  border: 1px solid var(--blue);
+  box-shadow: 0 0 16px var(--blue-glow);
+  transition: transform 0.05s linear;
+  pointer-events: none;
+}
+
+#touch-interact {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(10, 15, 31, 0.7);
+  border: 2px solid var(--blue);
+  color: var(--blue);
+  text-shadow: 0 0 10px var(--blue-glow);
+  box-shadow: 0 0 20px rgba(62, 168, 255, 0.4), inset 0 0 12px rgba(62, 168, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: inherit;
+  letter-spacing: 2px;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: manipulation;
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+#touch-interact .ti-icon { font-size: 30px; line-height: 1; }
+#touch-interact .ti-label { font-size: 11px; line-height: 1; }
+
+#touch-interact.active {
+  opacity: 1;
+  border-color: var(--gold);
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold);
+  box-shadow: 0 0 28px rgba(255, 216, 107, 0.6), inset 0 0 14px rgba(255, 216, 107, 0.18);
+  animation: interactPulse 1.2s infinite alternate;
+}
+
+#touch-interact:active {
+  transform: scale(0.92);
+}
+
+@keyframes interactPulse {
+  from { box-shadow: 0 0 18px rgba(255, 216, 107, 0.45); }
+  to   { box-shadow: 0 0 34px rgba(255, 216, 107, 0.9); }
+}
+
+/* ==========================================================
+   ROTATE-TO-LANDSCAPE OVERLAY
+   ========================================================== */
+#rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0a1428 0%, #03040a 80%);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.rotate-inner {
+  max-width: 280px;
+}
+
+.rotate-icon {
+  font-size: 64px;
+  color: var(--blue);
+  text-shadow: 0 0 18px var(--blue-glow);
+  animation: rotateSpin 2s infinite linear;
+  margin-bottom: 18px;
+}
+
+@keyframes rotateSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.rotate-title {
+  color: var(--blue);
+  letter-spacing: 3px;
+  font-weight: 600;
+  text-shadow: 0 0 10px var(--blue-glow);
+  margin-bottom: 10px;
+}
+
+.rotate-text {
+  color: #9cb3d8;
+  font-size: 14px;
+  letter-spacing: 1px;
+  line-height: 1.5;
+}
+
+@media (orientation: portrait) and (max-width: 640px) and (pointer: coarse) {
+  #rotate-overlay { display: flex; }
+}
+
+/* ==========================================================
+   MOBILE PANELS (responsive sizing for small screens)
+   ========================================================== */
+@media (max-width: 720px) {
+  .panel {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 18px 16px 14px;
+  }
+
+  .panel h2 {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  .subtitle { font-size: 12px; margin-bottom: 12px; }
+
+  .clues { font-size: 13px; line-height: 1.7; }
+
+  .seq-slot { width: 48px; height: 48px; font-size: 24px; }
+  .seq-buttons button { width: 52px; height: 52px; font-size: 22px; }
+
+  .lock-digit { width: 44px; height: 56px; font-size: 28px; }
+
+  #memory-board[data-cols="3"] { grid-template-columns: repeat(3, 62px); }
+  #memory-board[data-cols="4"] { grid-template-columns: repeat(4, 58px); gap: 8px; }
+  #memory-board[data-cols="5"] { grid-template-columns: repeat(5, 52px); gap: 6px; }
+  .mem-tile { width: 62px; height: 62px; font-size: 26px; }
+  #memory-board[data-cols="4"] .mem-tile { width: 58px; height: 58px; font-size: 24px; }
+  #memory-board[data-cols="5"] .mem-tile { width: 52px; height: 52px; font-size: 22px; }
+
+  .circuit-rune { width: 42px; height: 42px; font-size: 20px; }
+  .circuit-runes { gap: 6px; }
+
+  .seer-seq { font-size: 22px; gap: 10px; }
+  .seer-options button { width: 66px; height: 52px; font-size: 20px; }
+
+  .swatch { width: 72px; height: 72px; }
+  .color-btn { width: 72px; height: 46px; font-size: 12px; }
+  .color-buttons { gap: 10px; }
+
+  .cipher-numbers { font-size: 26px; letter-spacing: 6px; }
+  .cipher-input { width: 100%; max-width: 240px; height: 50px; font-size: 22px; letter-spacing: 5px; }
+
+  .shop-items { gap: 12px; }
+  .shop-item { min-width: 120px; padding: 12px 16px; }
+  .pet-emoji { font-size: 42px; }
+
+  .boss-scrambled { font-size: 26px; letter-spacing: 6px; }
+  .sigil-slot, .sigil-btn { width: 38px; height: 38px; font-size: 18px; }
+  .sigil-btn { width: 46px; height: 46px; font-size: 20px; }
+
+  .menu-buttons { max-width: 100%; }
+}
+
+/* Touch devices get bigger HUD buttons regardless of width */
+@media (pointer: coarse) {
+  #menu-btn, #mute-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  #hud { font-size: 13px; padding: 8px 10px; }
+
+  /* On touch, the interact button shows the target label, so the scaled
+     in-game hint becomes redundant and visually cramped. */
+  #hint { display: none !important; }
 }
