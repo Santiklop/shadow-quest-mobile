@@ -113,6 +113,10 @@ body {
   pointer-events: none;
   letter-spacing: 2px;
   font-size: 14px;
+  /* Needed on desktop: #stage is a later DOM sibling and its canvas paints an
+     opaque background over the whole #game box. Without a z-index here the
+     HUD would be hidden behind the canvas. */
+  z-index: 10;
 }
 
 #title {
