@@ -6,9 +6,106 @@
 
   // Canvas emoji font stack. iOS Safari falls back to a non-color glyph (just
   // the outline/shadow) when the canvas font is plain 'serif', so we name the
-  // platform color-emoji fonts explicitly here.
+  // platform color-emoji fonts explicitly here. (Newer iOS only — older iOS
+  // can't render color emoji on canvas at all, which is why the character
+  // sprites are drawn as DOM elements via #sprite-layer instead.)
   const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", serif';
   function emojiFont(px) { return px + 'px ' + EMOJI_FONT; }
+
+  const spriteLayer = document.getElementById('sprite-layer');
+
+  function makeSprite(emoji, size, extraClass) {
+    const el = document.createElement('div');
+    el.className = 'sprite' + (extraClass ? ' ' + extraClass : '');
+    el.style.fontSize = size + 'px';
+    el.style.width = Math.ceil(size * 1.3) + 'px';
+    el.style.height = Math.ceil(size * 1.3) + 'px';
+    el.textContent = emoji;
+    spriteLayer.appendChild(el);
+    return el;
+  }
+
+  function positionSprite(el, x, y) {
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  }
+
+  const sprites = {
+    player: null,
+    bear: null,
+    pets: [],
+    stations: {},
+    shop: null,
+    bossPortal: null,
+  };
+
+  function rebuildLevelSprites() {
+    Object.values(sprites.stations).forEach(el => el.remove());
+    sprites.stations = {};
+    if (sprites.shop) { sprites.shop.remove(); sprites.shop = null; }
+    if (sprites.bossPortal) { sprites.bossPortal.remove(); sprites.bossPortal = null; }
+
+    const L = LEVELS[state ? state.currentLevel : 1] || LEVELS[1];
+    for (const s of L.stations) {
+      const el = makeSprite(s.emoji, 28, 'sprite-station');
+      positionSprite(el, s.x, s.y);
+      sprites.stations[s.id] = el;
+    }
+    if (L.shopPos) {
+      sprites.shop = makeSprite('\u26E9\uFE0F', 30, 'sprite-shop');
+      positionSprite(sprites.shop, L.shopPos.x, L.shopPos.y);
+    }
+    if (L.bossPortal) {
+      sprites.bossPortal = makeSprite('\u{1F480}', 36, 'sprite-boss');
+      positionSprite(sprites.bossPortal, L.bossPortal.x, L.bossPortal.y);
+    }
+  }
+
+  function updateSprites() {
+    if (!sprites.player) {
+      sprites.player = makeSprite('\u{1F467}', 36, 'sprite-player');
+    }
+    positionSprite(sprites.player, player.x, player.y);
+
+    if (state.bear) {
+      if (!sprites.bear) {
+        sprites.bear = makeSprite('\u{1F43B}', 40, 'sprite-bear');
+      }
+      sprites.bear.style.fontSize = Math.round(40 * state.bear.size) + 'px';
+      positionSprite(sprites.bear, state.bear.x, state.bear.y);
+    } else if (sprites.bear) {
+      sprites.bear.remove();
+      sprites.bear = null;
+    }
+
+    while (sprites.pets.length < state.petInstances.length) {
+      const pi = state.petInstances[sprites.pets.length];
+      const size = (pi.id === 'dragon' || pi.id === 'unicorn') ? 34 : 28;
+      const el = makeSprite(PETS[pi.id].emoji, size, 'sprite-pet-' + pi.id);
+      sprites.pets.push(el);
+    }
+    while (sprites.pets.length > state.petInstances.length) {
+      sprites.pets.pop().remove();
+    }
+    state.petInstances.forEach((pi, i) => {
+      positionSprite(sprites.pets[i], pi.x, pi.y);
+    });
+
+    const solved = ls().solved;
+    Object.entries(sprites.stations).forEach(([id, el]) => {
+      el.classList.toggle('dim', !!solved[id]);
+    });
+
+    const L = currentLevel();
+    if (sprites.shop) {
+      sprites.shop.classList.toggle('gone', ls().shopBought);
+      sprites.shop.classList.toggle('dim', ls().coins < L.coinTarget);
+    }
+    if (sprites.bossPortal) {
+      sprites.bossPortal.classList.toggle('gone', !ls().shopBought);
+      sprites.bossPortal.classList.toggle('dim', state.bossDefeated);
+    }
+  }
 
   // ==========================================================
   // LEVEL DEFINITIONS
@@ -19,7 +116,7 @@
       coinTarget: 3,
       stations: [
         { id: 'sequence', x: 180, y: 180, label: 'Rune Sequence', emoji: '\u{1F52E}', difficulty: 1 },
-        { id: 'lock',     x: 780, y: 200, label: 'Arcane Lock',   emoji: '\u{1F5DD}', difficulty: 1 },
+        { id: 'lock',     x: 780, y: 200, label: 'Arcane Lock',   emoji: '\u{1F5DD}\uFE0F', difficulty: 1 },
         { id: 'memory',   x: 180, y: 490, label: 'Shadow Pairs',  emoji: '\u{1F300}', difficulty: 1 },
       ],
       shopPos: { x: 780, y: 480 },
@@ -35,7 +132,7 @@
       stations: [
         { id: 'sequence', x: 140, y: 160, label: 'Rune Sequence',   emoji: '\u{1F52E}', difficulty: 2 },
         { id: 'memory',   x: 480, y: 130, label: 'Shadow Pairs',    emoji: '\u{1F300}', difficulty: 2 },
-        { id: 'lock',     x: 820, y: 160, label: 'Arcane Lock',     emoji: '\u{1F5DD}', difficulty: 2 },
+        { id: 'lock',     x: 820, y: 160, label: 'Arcane Lock',     emoji: '\u{1F5DD}\uFE0F', difficulty: 2 },
         { id: 'circuit',  x: 220, y: 450, label: 'Rune Circuit',    emoji: '\u{1F4A1}', difficulty: 2 },
         { id: 'seer',     x: 740, y: 450, label: "Seer's Sequence", emoji: '\u{1F522}', difficulty: 2 },
       ],
@@ -52,7 +149,7 @@
       stations: [
         { id: 'sequence', x: 130, y: 140, label: 'Rune Sequence',   emoji: '\u{1F52E}', difficulty: 3 },
         { id: 'memory',   x: 480, y: 120, label: 'Shadow Pairs',    emoji: '\u{1F300}', difficulty: 3 },
-        { id: 'lock',     x: 830, y: 140, label: 'Arcane Lock',     emoji: '\u{1F5DD}', difficulty: 3 },
+        { id: 'lock',     x: 830, y: 140, label: 'Arcane Lock',     emoji: '\u{1F5DD}\uFE0F', difficulty: 3 },
         { id: 'circuit',  x: 180, y: 330, label: 'Rune Circuit',    emoji: '\u{1F4A1}', difficulty: 3 },
         { id: 'seer',     x: 780, y: 330, label: "Seer's Sequence", emoji: '\u{1F522}', difficulty: 3 },
         { id: 'color',    x: 280, y: 500, label: 'Color Mixer',     emoji: '\u{1F3A8}' },
@@ -934,10 +1031,7 @@
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
 
-    ctx.font = emojiFont(36 * b.size);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('\u{1F43B}', 0, 2);
+    // Bear face emoji rendered as a DOM sprite (see sprites.bear).
 
     // Balalaika
     const bx = 16 * b.size;
@@ -1128,11 +1222,10 @@
     }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
-    ctx.font = emojiFont(24);
+    // Station emoji rendered as a DOM sprite (see sprites.stations).
+    ctx.font = '11px Consolas, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(s.emoji, 0, 2);
-    ctx.font = '11px Consolas, monospace';
     ctx.fillStyle = solved ? '#3a4e70' : '#8bb6e6';
     ctx.fillText(solved ? '[ cleared ]' : s.label, 0, 56);
     ctx.restore();
@@ -1153,11 +1246,10 @@
       ctx.beginPath(); ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.arc(0, 0, 28 * pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.shadowBlur = 0;
-      ctx.font = emojiFont(28);
+      // Shop emoji rendered as DOM sprite (see sprites.shop).
+      ctx.font = '11px Consolas, monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('\u26E9', 0, 2);
-      ctx.font = '11px Consolas, monospace';
       ctx.fillStyle = '#c8aaff';
       ctx.fillText('Summoning Altar', 0, 58);
     } else {
@@ -1165,12 +1257,11 @@
       ctx.strokeStyle = '#404060';
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
-      ctx.font = emojiFont(26);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('\u26E9', 0, 2);
+      // Shop emoji rendered as DOM sprite (dimmed via .dim class).
       ctx.globalAlpha = 0.5;
       ctx.font = '11px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = '#4a5570';
       ctx.fillText('[ sealed ]', 0, 58);
     }
@@ -1223,12 +1314,10 @@
       ctx.stroke();
     }
     ctx.shadowBlur = 0;
-    ctx.font = emojiFont(34);
+    // Boss portal emoji rendered as DOM sprite (see sprites.bossPortal).
+    ctx.font = '11px Consolas, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(defeated ? '\u2620' : '\u{1F480}', 0, 4);
-    ctx.font = '11px Consolas, monospace';
     ctx.fillStyle = defeated ? '#8888aa' : '#ff6080';
     ctx.fillText(defeated ? '[ MONARCH SLAIN ]' : 'FINAL BOSS', 0, 70);
     ctx.restore();
@@ -1241,10 +1330,7 @@
     grad.addColorStop(1, 'rgba(62, 168, 255, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(player.x, player.y, 38, 0, Math.PI * 2); ctx.fill();
-    ctx.font = emojiFont(34);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('\u{1F467}', player.x, player.y);
+    // Player emoji rendered as DOM sprite (see sprites.player).
     ctx.restore();
   }
 
@@ -1267,10 +1353,7 @@
       grad.addColorStop(1, cOut);
       ctx.fillStyle = grad;
       ctx.beginPath(); ctx.arc(pi.x, pi.y, 32, 0, Math.PI * 2); ctx.fill();
-      ctx.font = emojiFont(pi.id === 'dragon' || pi.id === 'unicorn' ? 32 : 26);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(PETS[pi.id].emoji, pi.x, pi.y);
+      // Pet emoji rendered as DOM sprite (see sprites.pets).
       ctx.restore();
     });
   }
@@ -1533,7 +1616,7 @@
   // ==========================================================
   // PUZZLE 3: Shadow Pairs
   // ==========================================================
-  const MEM_SYMBOLS_ALL = ['\u{1F409}', '\u{1F5E1}', '\u{1F451}', '\u{1F480}', '\u{1F6E1}', '\u2694\uFE0F'];
+  const MEM_SYMBOLS_ALL = ['\u{1F409}', '\u{1F5E1}\uFE0F', '\u{1F451}', '\u{1F480}', '\u{1F6E1}\uFE0F', '\u2694\uFE0F'];
   let memFlipped = [];
   let memMatched = 0;
   let memPairCount = 3;
@@ -2105,7 +2188,7 @@
     });
     closeModal();
     audio.portal();
-    notify('\u26E9  ' + item.name + ' summoned!', 'win');
+    notify('\u26E9\uFE0F  ' + item.name + ' summoned!', 'win');
     setTimeout(() => {
       if (currentLevel().exitPos) notify('A gateway to the next level has opened.');
       else if (currentLevel().bossPortal) notify('\u{1F480}  A crimson portal appears. The final boss awaits.', 'danger');
@@ -2132,7 +2215,7 @@
     audio.coin();
     notify('\u2726 +1 Coin  (' + s.coins + '/' + L.coinTarget + ')');
     if (s.coins === L.coinTarget) {
-      setTimeout(() => notify('\u26E9  The Summoning Altar awakens.'), 900);
+      setTimeout(() => notify('\u26E9\uFE0F  The Summoning Altar awakens.'), 900);
     }
   }
 
@@ -2154,6 +2237,7 @@
     else state.snake = null;
     if (L.bear) spawnBear();
     else state.bear = null;
+    rebuildLevelSprites();
     updateCoinUI();
     updateTitleUI();
     closeModal();
@@ -2219,6 +2303,7 @@
     updateFireworks();
     updateProximity();
     drawWorld();
+    updateSprites();
     requestAnimationFrame(loop);
   }
 
@@ -2232,6 +2317,7 @@
   updateMuteButton();
   if (LEVELS[1].snake) spawnSnake();
   if (LEVELS[1].bear) spawnBear();
+  rebuildLevelSprites();
   notify('\u2694\uFE0F  ' + LEVELS[1].title);
   setTimeout(() => notify('Find 3 runes, then visit the altar.'), 700);
   setTimeout(() => notify('\u26A0 Beware the serpent \u2014 head AND tail bite.', 'danger'), 1500);

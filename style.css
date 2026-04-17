@@ -765,6 +765,57 @@ button:disabled, .shop-item:disabled {
 }
 
 /* ==========================================================
+   CANVAS SPRITE OVERLAY
+   iOS Safari (pre-16.4) can't render color emoji via
+   ctx.fillText, so we place emoji sprites as DOM elements on
+   top of the canvas. DOM text handles emoji reliably on all
+   platforms.
+   ========================================================== */
+#sprite-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+  text-align: center;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji',
+               'Twemoji Mozilla', 'EmojiOne Color', sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.25s;
+  will-change: transform;
+}
+
+.sprite.dim { opacity: 0.32; }
+.sprite.gone { display: none; }
+
+/* Layering mirrors the canvas draw order (snake, bear, pets, player). */
+.sprite-station { z-index: 1; }
+.sprite-shop    { z-index: 1; }
+.sprite-boss    { z-index: 1; }
+.sprite-bear    { z-index: 2; }
+.sprite-pet-cat, .sprite-pet-dog,
+.sprite-pet-dragon, .sprite-pet-unicorn { z-index: 3; }
+.sprite-player  { z-index: 4; }
+
+.sprite.sprite-player { filter: drop-shadow(0 0 8px rgba(62, 168, 255, 0.9)); }
+.sprite.sprite-bear   { filter: drop-shadow(0 0 6px rgba(180, 100, 60, 0.8)); }
+.sprite.sprite-pet-cat,
+.sprite.sprite-pet-dog   { filter: drop-shadow(0 0 8px rgba(138, 92, 246, 0.85)); }
+.sprite.sprite-pet-dragon  { filter: drop-shadow(0 0 10px rgba(255, 120, 60, 0.9)); }
+.sprite.sprite-pet-unicorn { filter: drop-shadow(0 0 12px rgba(255, 200, 255, 1)); }
+.sprite.sprite-shop   { filter: drop-shadow(0 0 10px rgba(138, 92, 246, 0.85)); }
+.sprite.sprite-boss   { filter: drop-shadow(0 0 12px rgba(255, 0, 80, 0.9)); }
+
+/* ==========================================================
    TOUCH ACTIVE STATES (mirrors :hover for mobile feedback)
    ========================================================== */
 button:active:not(:disabled),
