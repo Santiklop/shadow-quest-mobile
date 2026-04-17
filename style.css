@@ -62,6 +62,25 @@ body {
   overflow: hidden;
 }
 
+#signature {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: rgba(169, 212, 255, 0.55);
+  text-shadow: 0 0 6px rgba(62, 168, 255, 0.4);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* On mobile the #game box is full-width and native-size, so the canvas-style
+   16px signature is too prominent. Shrink a notch and keep it discreet. */
+@media (pointer: coarse) {
+  #signature { font-size: 12px; right: 8px; bottom: 6px; }
+}
+
 #stage-inner {
   position: absolute;
   top: 50%;
@@ -69,11 +88,12 @@ body {
   width: 960px;
   height: 640px;
   /* Fixed-pixel negative margins center a known-size element at top:50%/left:50%
-     reliably across browsers (translate-percent-based centering composed oddly
-     with transform:scale on iOS Safari — the game ended up off-centered). */
+     reliably across browsers. On desktop the scale is applied to #game as a
+     whole, so #stage-inner itself has no transform — otherwise the page would
+     be double-scaled (scale² = tiny) in smaller desktop windows. The mobile
+     @media block reinstates a scale() on this element, since on mobile #game
+     no longer scales. */
   margin: -320px 0 0 -480px;
-  transform: scale(var(--game-scale, 1));
-  transform-origin: center center;
 }
 
 #world {
