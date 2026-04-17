@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Shadow Quest</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game">
+    <canvas id="world" width="960" height="640"></canvas>
+
+    <div id="hud">
+      <div id="title">&#x2694;&#xFE0F; SHADOW QUEST</div>
+      <div id="hud-right">
+        <div id="coins">&#x2726; Coins: <span id="coinCount">0</span> / <span id="coinTarget">3</span></div>
+        <button id="mute-btn" title="Mute (M)">&#x1F50A;</button>
+        <button id="menu-btn" title="Menu (Esc)">&#x2630;</button>
+      </div>
+    </div>
+
+    <div id="hint" class="hidden">[ SPACE ] Interact</div>
+
+    <div id="notifications"></div>
+  </div>
+
+  <div id="touch-controls" class="hidden">
+    <div id="joystick" aria-hidden="true">
+      <div id="joystick-knob"></div>
+    </div>
+    <button id="touch-interact" type="button" aria-label="Interact">
+      <span class="ti-icon">&#x2726;</span>
+      <span class="ti-label">TAP</span>
+    </button>
+  </div>
+
+  <div id="rotate-overlay">
+    <div class="rotate-inner">
+      <div class="rotate-icon">&#x21BB;</div>
+      <div class="rotate-title">ROTATE YOUR DEVICE</div>
+      <div class="rotate-text">Shadow Quest plays best in landscape.</div>
+    </div>
+  </div>
+
+  <div id="overlay" class="hidden">
+
+      <div id="p-sequence" class="panel hidden">
+        <h2>RUNE SEQUENCE</h2>
+        <p class="subtitle">Memorize the order of the awakening runes.</p>
+        <div id="seq-display" class="seq-display"></div>
+        <div id="seq-buttons" class="seq-buttons"></div>
+        <div id="seq-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-lock" class="panel hidden">
+        <h2>ARCANE LOCK</h2>
+        <p class="subtitle">Decipher the code.</p>
+        <div class="clues" id="lock-clues"></div>
+        <div class="lock-inputs" id="lock-inputs"></div>
+        <button id="lock-submit">Unlock</button>
+        <div id="lock-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-memory" class="panel hidden">
+        <h2>SHADOW PAIRS</h2>
+        <p class="subtitle">Find the matching pairs.</p>
+        <div id="memory-board"></div>
+        <div id="memory-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-circuit" class="panel hidden">
+        <h2>RUNE CIRCUIT</h2>
+        <p class="subtitle">Clicking a rune toggles it AND its neighbors. Light all runes.</p>
+        <div id="circuit-runes" class="circuit-runes"></div>
+        <div id="circuit-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-seer" class="panel hidden">
+        <h2>SEER'S SEQUENCE</h2>
+        <p class="subtitle">Divine the missing number.</p>
+        <div id="seer-seq" class="seer-seq"></div>
+        <div id="seer-hint" class="seer-hint"></div>
+        <div id="seer-options" class="seer-options"></div>
+        <div id="seer-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-color" class="panel hidden">
+        <h2>COLOR MIXER</h2>
+        <p class="subtitle">Toggle the base runes until your color matches the target.</p>
+        <div class="color-compare">
+          <div class="color-col">
+            <div class="swatch-label">YOURS</div>
+            <div class="swatch" id="color-yours"></div>
+          </div>
+          <div class="swatch-arrow">&harr;</div>
+          <div class="color-col">
+            <div class="swatch-label">TARGET</div>
+            <div class="swatch" id="color-target"></div>
+          </div>
+        </div>
+        <div class="color-buttons" id="color-buttons"></div>
+        <div id="color-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-cipher" class="panel hidden">
+        <h2>ANCIENT CIPHER</h2>
+        <p class="subtitle">A = 1, B = 2, C = 3, ... Z = 26. Decode the word.</p>
+        <div class="cipher-numbers" id="cipher-numbers"></div>
+        <input type="text" id="cipher-input" class="cipher-input" placeholder="?" maxlength="10" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" />
+        <div><button id="cipher-submit">Decode</button></div>
+        <div id="cipher-status" class="status"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-shop" class="panel hidden">
+        <h2>SUMMONING ALTAR</h2>
+        <p class="subtitle">Choose your shadow companion.</p>
+        <div class="shop-items" id="shop-items"></div>
+        <button class="close-btn">Leave</button>
+      </div>
+
+      <div id="p-boss" class="panel panel-boss hidden">
+        <div class="boss-header">
+          <h2>THE ARCH-SHADOW</h2>
+          <div class="boss-sprite">&#x1F480;</div>
+          <div class="boss-shards" id="boss-shards">
+            <span class="shard">&#x2726;</span>
+            <span class="shard">&#x2726;</span>
+            <span class="shard">&#x2726;</span>
+          </div>
+        </div>
+
+        <div id="boss-phase-1" class="boss-phase">
+          <p class="subtitle">SHARD I &mdash; The Reverse Echo</p>
+          <p class="boss-prompt">Memorize the Monarch's chant, then repeat it in <em>REVERSE</em> order.</p>
+          <div id="boss-echo-display" class="seq-display"></div>
+          <div id="boss-echo-buttons" class="seq-buttons"></div>
+          <div id="boss-echo-status" class="status"></div>
+        </div>
+
+        <div id="boss-phase-2" class="boss-phase hidden">
+          <p class="subtitle">SHARD II &mdash; The Shadow Word</p>
+          <p class="boss-prompt">Unscramble the Monarch's true name.</p>
+          <div id="boss-word-scrambled" class="boss-scrambled"></div>
+          <div id="boss-word-hint" class="boss-hint"></div>
+          <input type="text" id="boss-word-input" class="cipher-input" maxlength="10" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" />
+          <div><button id="boss-word-submit">Speak</button></div>
+          <div id="boss-word-status" class="status"></div>
+        </div>
+
+        <div id="boss-phase-3" class="boss-phase hidden">
+          <p class="subtitle">SHARD III &mdash; The Binding Sigil</p>
+          <p class="boss-prompt">Shape your runes to match the target. A rune toggles itself <em>and</em> both neighbors.</p>
+          <div class="boss-sigil-wrap">
+            <div class="sigil-label">TARGET</div>
+            <div id="boss-sigil-target" class="sigil-row"></div>
+          </div>
+          <div class="boss-sigil-wrap">
+            <div class="sigil-label">YOURS</div>
+            <div id="boss-sigil-state" class="sigil-row"></div>
+          </div>
+          <div id="boss-sigil-status" class="status"></div>
+        </div>
+
+        <div id="boss-victory" class="hidden">
+          <div class="victory-crown">&#x1F451;</div>
+          <h2 class="victory-title">THE ARCH-SHADOW FALLS</h2>
+          <p class="victory-text">You have become the new Shadow Monarch.<br/>Walk freely with your companions.</p>
+        </div>
+
+        <button class="close-btn boss-close">Leave</button>
+      </div>
+
+      <div id="p-menu" class="panel hidden">
+        <h2>PAUSE MENU</h2>
+        <p class="subtitle">Tap Continue or press Esc to close.</p>
+        <div class="menu-buttons">
+          <button id="menu-continue">Continue</button>
+          <button id="menu-prev">Previous Level</button>
+          <button id="menu-next">Skip to Next Level</button>
+          <button id="menu-restart">Restart Game</button>
+        </div>
+      </div>
+
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
