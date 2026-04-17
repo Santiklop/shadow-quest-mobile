@@ -23,8 +23,11 @@ html, body {
     #000;
   color: var(--text);
   font-family: 'Segoe UI', system-ui, sans-serif;
+  /* svh (small viewport) is the size when the Safari URL bar is visible —
+     using it guarantees the game never extends behind the browser chrome.
+     vh is the fallback for older browsers. */
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -1055,4 +1058,135 @@ body.modal-open #touch-controls { display: none; }
   /* On touch, the interact button shows the target label, so the scaled
      in-game hint becomes redundant and visually cramped. */
   #hint { display: none !important; }
+}
+
+/* ==========================================================
+   SHORT VIEWPORTS (landscape phones, ~<= 520px tall)
+   Aggressively tighten vertical spacing so every puzzle panel
+   fits without scrolling the overlay.
+   ========================================================== */
+@media (max-height: 520px) {
+  #overlay { padding: 6px; }
+
+  .panel {
+    min-width: 0;
+    width: 100%;
+    max-width: 640px;
+    max-height: calc(100svh - 12px);
+    max-height: calc(100vh - 12px);
+    padding: 10px 16px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .panel h2 {
+    font-size: 16px;
+    letter-spacing: 2px;
+    margin: 0 0 2px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    margin: 0 0 6px;
+    letter-spacing: 1px;
+  }
+
+  .clues {
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 4px auto;
+    max-width: 100%;
+  }
+
+  .status {
+    margin: 4px 0 0;
+    min-height: 14px;
+    font-size: 12px;
+  }
+
+  .close-btn {
+    margin-top: 6px;
+    padding: 4px 14px;
+    font-size: 12px;
+  }
+
+  /* Rune sequence */
+  .seq-display {
+    margin: 4px 0;
+    min-height: 48px;
+    gap: 6px;
+  }
+  .seq-buttons {
+    margin: 2px 0;
+    min-height: 44px;
+    gap: 6px;
+  }
+  .seq-slot { width: 40px; height: 40px; font-size: 20px; }
+  .seq-buttons button { width: 44px; height: 44px; font-size: 18px; padding: 0; }
+
+  /* Arcane lock */
+  .lock-inputs { margin: 6px 0; gap: 8px; }
+  .lock-digit { width: 36px; height: 42px; font-size: 22px; }
+  #lock-submit { padding: 4px 14px; font-size: 12px; }
+
+  /* Shadow pairs */
+  #memory-board { margin: 4px 0; gap: 5px; }
+  #memory-board[data-cols="3"] { grid-template-columns: repeat(3, 44px); }
+  #memory-board[data-cols="4"] { grid-template-columns: repeat(4, 42px); }
+  #memory-board[data-cols="5"] { grid-template-columns: repeat(5, 38px); }
+  .mem-tile { width: 44px; height: 44px; font-size: 20px; }
+  #memory-board[data-cols="4"] .mem-tile { width: 42px; height: 42px; font-size: 18px; }
+  #memory-board[data-cols="5"] .mem-tile { width: 38px; height: 38px; font-size: 16px; }
+
+  /* Rune circuit */
+  .circuit-runes { margin: 6px 0; gap: 5px; }
+  .circuit-rune { width: 38px; height: 38px; font-size: 18px; }
+
+  /* Seer's sequence */
+  .seer-seq { font-size: 18px; gap: 8px; margin: 6px 0 2px; }
+  .seer-hint { font-size: 11px; margin-bottom: 4px; }
+  .seer-options { gap: 8px; }
+  .seer-options button { width: 56px; height: 42px; font-size: 18px; padding: 0; }
+
+  /* Color mixer */
+  .color-compare { margin: 4px 0 8px; gap: 12px; }
+  .swatch { width: 54px; height: 54px; }
+  .swatch-arrow { font-size: 22px; }
+  .color-buttons { gap: 8px; }
+  .color-btn { width: 62px; height: 40px; font-size: 11px; border-width: 1px; }
+
+  /* Ancient cipher */
+  .cipher-numbers { font-size: 20px; letter-spacing: 4px; margin: 6px 0 4px; }
+  .cipher-input { height: 40px; font-size: 18px; letter-spacing: 4px; margin-bottom: 4px; width: 200px; }
+  #cipher-submit { padding: 4px 14px; font-size: 12px; }
+
+  /* Shop */
+  .shop-items { gap: 10px; margin: 6px 0 0; }
+  .shop-item { padding: 8px 12px; min-width: 100px; }
+  .pet-emoji { font-size: 34px; }
+  .shop-item > div { font-size: 12px; }
+
+  /* Boss */
+  .boss-header { margin-bottom: 4px; }
+  .boss-sprite { font-size: 40px; margin: 0; }
+  .boss-shards { margin: 2px 0; font-size: 14px; gap: 10px; }
+  .boss-prompt { font-size: 11px; margin: 0 0 4px; letter-spacing: 0.5px; }
+  .boss-scrambled { font-size: 22px; letter-spacing: 5px; margin: 6px 0 2px; }
+  .boss-hint { font-size: 11px; margin-bottom: 4px; }
+  .sigil-row { margin: 2px 0; gap: 5px; }
+  .sigil-slot { width: 30px; height: 30px; font-size: 15px; }
+  .sigil-btn { width: 38px; height: 38px; font-size: 18px; padding: 0; }
+  .sigil-label { font-size: 10px; margin-bottom: 2px; }
+  .boss-sigil-wrap { margin: 4px 0; }
+  #boss-word-submit { padding: 4px 14px; font-size: 12px; }
+  .victory-title { font-size: 20px !important; letter-spacing: 3px !important; }
+  .victory-crown { font-size: 44px; margin: 2px 0; }
+  .victory-text { font-size: 12px; margin: 4px 0; }
+
+  /* Menu */
+  .menu-buttons { gap: 6px; margin: 6px auto 2px; max-width: 220px; }
+  .menu-buttons button { padding: 6px 14px; font-size: 12px; }
 }
