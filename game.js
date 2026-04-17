@@ -772,6 +772,15 @@
     });
   }
 
+  // Short display names for station labels that don't fit the interact button.
+  const INTERACT_LABEL_OVERRIDE = {
+    "Seer's Sequence":    "Seer",
+    "Summoning Altar":    "Altar",
+    "Exit to Next Level": "Exit",
+    "Ancient Cipher":     "Cipher",
+    "Monarch Slain":      "Slain",
+  };
+
   function updateTouchInteractButton() {
     if (!isTouchDevice) return;
     const el = document.getElementById('touch-interact');
@@ -779,9 +788,11 @@
     const label = el.querySelector('.ti-label');
     if (state.near && !state.modalOpen) {
       el.classList.add('active');
-      if (label) label.textContent = state.near.label.length > 14
-        ? state.near.label.slice(0, 13) + '\u2026'
-        : state.near.label;
+      if (label) {
+        const raw = state.near.label;
+        label.textContent = INTERACT_LABEL_OVERRIDE[raw]
+          || (raw.length > 12 ? raw.slice(0, 11) + '\u2026' : raw);
+      }
     } else {
       el.classList.remove('active');
       if (label) label.textContent = 'TAP';
@@ -1468,6 +1479,7 @@
   let seqAnswer = [];
   let seqInput = [];
   let seqSymbols = [];
+  let seqRestarting = false;
 
   function startSequence() {
     const diff = currentStation('sequence').difficulty || 1;
@@ -1475,6 +1487,7 @@
     seqSymbols = SEQ_SYMBOLS_ALL.slice(0, count);
     seqAnswer = shuffle(seqSymbols.slice());
     seqInput = [];
+    seqRestarting = false;
     audio.setMusicVolume(0.04); // duck BGM so chords are clearly audible
     const display = document.getElementById('seq-display');
     const btns = document.getElementById('seq-buttons');
@@ -1519,6 +1532,7 @@
   }
 
   function handleSeqClick(sym, slots, status) {
+    if (seqRestarting) return;
     if (seqInput.length >= seqAnswer.length) return;
     const idx = seqInput.length;
     seqInput.push(sym);
@@ -1528,6 +1542,7 @@
       audio.wrongChord();
       status.textContent = '\u2717 Wrong order. Retrying...';
       status.className = 'status err';
+      seqRestarting = true;
       setTimeout(() => startSequence(), 1200);
       return;
     }
@@ -2021,6 +2036,8 @@
       const s = document.getElementById('boss-echo-status');
       s.textContent = '\u2717 The shadow rejects your echo. Restarting...';
       s.className = 'status err';
+      // Re-gate input until startBossEcho runs and re-enables it.
+      bossEchoRevealing = true;
       setTimeout(() => startBossEcho(), 1400);
       return;
     }
