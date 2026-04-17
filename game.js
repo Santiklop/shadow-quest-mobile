@@ -47,16 +47,16 @@
 
     const L = LEVELS[state ? state.currentLevel : 1] || LEVELS[1];
     for (const s of L.stations) {
-      const el = makeSprite(s.emoji, 28, 'sprite-station');
+      const el = makeSprite(s.emoji, 56, 'sprite-station');
       positionSprite(el, s.x, s.y);
       sprites.stations[s.id] = el;
     }
     if (L.shopPos) {
-      sprites.shop = makeSprite('\u26E9\uFE0F', 30, 'sprite-shop');
+      sprites.shop = makeSprite('\u26E9\uFE0F', 60, 'sprite-shop');
       positionSprite(sprites.shop, L.shopPos.x, L.shopPos.y);
     }
     if (L.bossPortal) {
-      sprites.bossPortal = makeSprite('\u{1F480}', 36, 'sprite-boss');
+      sprites.bossPortal = makeSprite('\u{1F480}', 72, 'sprite-boss');
       positionSprite(sprites.bossPortal, L.bossPortal.x, L.bossPortal.y);
     }
   }
@@ -841,7 +841,9 @@
 
     state.near = null;
     const L = currentLevel();
-    const r = 54;
+    // Proximity radius matches the new (2x) portal visual radius so the hint
+    // lights up when the player touches the outer ring.
+    const r = 80;
 
     for (const s of L.stations) {
       if (ls().solved[s.id]) continue;
@@ -1125,13 +1127,13 @@
 
   function drawSignature() {
     ctx.save();
-    ctx.font = '10px Consolas, monospace';
-    ctx.fillStyle = 'rgba(169, 212, 255, 0.45)';
+    ctx.font = '20px Consolas, monospace';
+    ctx.fillStyle = 'rgba(169, 212, 255, 0.55)';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     ctx.shadowColor = 'rgba(62, 168, 255, 0.5)';
-    ctx.shadowBlur = 4;
-    ctx.fillText('Created by Anna D (and her dad)', W - 12, H - 8);
+    ctx.shadowBlur = 8;
+    ctx.fillText('Created by Anna D (and her dad)', W - 20, H - 14);
     ctx.restore();
   }
 
@@ -1235,26 +1237,26 @@
     ctx.globalAlpha = solved ? 0.28 : 0.9;
     ctx.strokeStyle = solved ? '#2a4060' : '#3ea8ff';
     ctx.shadowColor = solved ? '#1a3353' : '#00aaff';
-    ctx.shadowBlur = solved ? 6 : 22;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, 36 * pulse, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, 24 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = solved ? 12 : 36;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, 0, 72 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 48 * pulse, 0, Math.PI * 2); ctx.stroke();
     const spokes = 6;
     for (let i = 0; i < spokes; i++) {
       const a = (i / spokes) * Math.PI * 2 + state.t * 0.01;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 30, Math.sin(a) * 30);
-      ctx.lineTo(Math.cos(a) * 38, Math.sin(a) * 38);
+      ctx.moveTo(Math.cos(a) * 60, Math.sin(a) * 60);
+      ctx.lineTo(Math.cos(a) * 76, Math.sin(a) * 76);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
     // Station emoji rendered as a DOM sprite (see sprites.stations).
-    ctx.font = '11px Consolas, monospace';
+    ctx.font = '22px Consolas, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = solved ? '#3a4e70' : '#8bb6e6';
-    ctx.fillText(solved ? '[ cleared ]' : s.label, 0, 56);
+    ctx.fillText(solved ? '[ cleared ]' : s.label, 0, 112);
     ctx.restore();
   }
 
@@ -1268,29 +1270,29 @@
       const pulse = 1 + Math.sin(state.t * 0.08) * 0.15;
       ctx.strokeStyle = '#c28cff';
       ctx.shadowColor = '#8a5cf6';
-      ctx.shadowBlur = 28 * pulse;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 0, 28 * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 44 * pulse;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, 84 * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 56 * pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.shadowBlur = 0;
       // Shop emoji rendered as DOM sprite (see sprites.shop).
-      ctx.font = '11px Consolas, monospace';
+      ctx.font = '22px Consolas, monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#c8aaff';
-      ctx.fillText('Summoning Altar', 0, 58);
+      ctx.fillText('Summoning Altar', 0, 116);
     } else {
       ctx.globalAlpha = 0.22;
       ctx.strokeStyle = '#404060';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 76, 0, Math.PI * 2); ctx.stroke();
       // Shop emoji rendered as DOM sprite (dimmed via .dim class).
       ctx.globalAlpha = 0.5;
-      ctx.font = '11px Consolas, monospace';
+      ctx.font = '22px Consolas, monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#4a5570';
-      ctx.fillText('[ sealed ]', 0, 58);
+      ctx.fillText('[ sealed ]', 0, 116);
     }
     ctx.restore();
   }
@@ -1303,19 +1305,19 @@
     ctx.translate(L.exitPos.x, L.exitPos.y);
     ctx.strokeStyle = '#66ffcc';
     ctx.shadowColor = '#00ffaa';
-    ctx.shadowBlur = 30 * pulse;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(0, 0, 40 * pulse, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, 26 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 48 * pulse;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(0, 0, 80 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 52 * pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.font = emojiFont(26);
+    ctx.font = emojiFont(52);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
-    ctx.fillText('\u25B2', 0, 4);
-    ctx.font = '11px Consolas, monospace';
+    ctx.fillText('\u25B2', 0, 8);
+    ctx.font = '22px Consolas, monospace';
     ctx.fillStyle = '#66ffcc';
-    ctx.fillText('EXIT', 0, 56);
+    ctx.fillText('EXIT', 0, 112);
     ctx.restore();
   }
 
@@ -1328,25 +1330,25 @@
     ctx.translate(L.bossPortal.x, L.bossPortal.y);
     ctx.strokeStyle = defeated ? '#8888aa' : '#ff3060';
     ctx.shadowColor = defeated ? '#444466' : '#ff0050';
-    ctx.shadowBlur = (defeated ? 10 : 34) * pulse;
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(0, 0, 48 * pulse, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, 34 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = (defeated ? 18 : 54) * pulse;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(0, 0, 96 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 68 * pulse, 0, Math.PI * 2); ctx.stroke();
     const spikes = 8;
     for (let i = 0; i < spikes; i++) {
       const a = (i / spikes) * Math.PI * 2 + state.t * 0.018;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 40, Math.sin(a) * 40);
-      ctx.lineTo(Math.cos(a) * 54, Math.sin(a) * 54);
+      ctx.moveTo(Math.cos(a) * 80, Math.sin(a) * 80);
+      ctx.lineTo(Math.cos(a) * 108, Math.sin(a) * 108);
       ctx.stroke();
     }
     ctx.shadowBlur = 0;
     // Boss portal emoji rendered as DOM sprite (see sprites.bossPortal).
-    ctx.font = '11px Consolas, monospace';
+    ctx.font = '22px Consolas, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = defeated ? '#8888aa' : '#ff6080';
-    ctx.fillText(defeated ? '[ MONARCH SLAIN ]' : 'FINAL BOSS', 0, 70);
+    ctx.fillText(defeated ? '[ MONARCH SLAIN ]' : 'FINAL BOSS', 0, 140);
     ctx.restore();
   }
 
