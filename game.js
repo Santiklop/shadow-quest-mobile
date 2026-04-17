@@ -4,6 +4,12 @@
   const W = canvas.width;
   const H = canvas.height;
 
+  // Canvas emoji font stack. iOS Safari falls back to a non-color glyph (just
+  // the outline/shadow) when the canvas font is plain 'serif', so we name the
+  // platform color-emoji fonts explicitly here.
+  const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", serif';
+  function emojiFont(px) { return px + 'px ' + EMOJI_FONT; }
+
   // ==========================================================
   // LEVEL DEFINITIONS
   // ==========================================================
@@ -928,7 +934,7 @@
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
 
-    ctx.font = (36 * b.size) + 'px serif';
+    ctx.font = emojiFont(36 * b.size);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('\u{1F43B}', 0, 2);
@@ -954,7 +960,7 @@
 
     if (b.noteAlpha > 0) {
       ctx.globalAlpha = b.noteAlpha;
-      ctx.font = '20px serif';
+      ctx.font = emojiFont(20);
       ctx.fillStyle = '#ffddaa';
       ctx.fillText('\u266A', 24 * b.size, -18 * b.size + b.noteY);
       ctx.globalAlpha = 1;
@@ -1122,7 +1128,7 @@
     }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
-    ctx.font = '24px serif';
+    ctx.font = emojiFont(24);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(s.emoji, 0, 2);
@@ -1147,7 +1153,7 @@
       ctx.beginPath(); ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.arc(0, 0, 28 * pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.shadowBlur = 0;
-      ctx.font = '28px serif';
+      ctx.font = emojiFont(28);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('\u26E9', 0, 2);
@@ -1159,7 +1165,7 @@
       ctx.strokeStyle = '#404060';
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
-      ctx.font = '26px serif';
+      ctx.font = emojiFont(26);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('\u26E9', 0, 2);
@@ -1184,7 +1190,7 @@
     ctx.beginPath(); ctx.arc(0, 0, 40 * pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 0, 26 * pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.font = '26px serif';
+    ctx.font = emojiFont(26);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
@@ -1217,7 +1223,7 @@
       ctx.stroke();
     }
     ctx.shadowBlur = 0;
-    ctx.font = '34px serif';
+    ctx.font = emojiFont(34);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
@@ -1235,7 +1241,7 @@
     grad.addColorStop(1, 'rgba(62, 168, 255, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(player.x, player.y, 38, 0, Math.PI * 2); ctx.fill();
-    ctx.font = '34px serif';
+    ctx.font = emojiFont(34);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('\u{1F467}', player.x, player.y);
@@ -1261,7 +1267,7 @@
       grad.addColorStop(1, cOut);
       ctx.fillStyle = grad;
       ctx.beginPath(); ctx.arc(pi.x, pi.y, 32, 0, Math.PI * 2); ctx.fill();
-      ctx.font = pi.id === 'dragon' || pi.id === 'unicorn' ? '32px serif' : '26px serif';
+      ctx.font = emojiFont(pi.id === 'dragon' || pi.id === 'unicorn' ? 32 : 26);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(PETS[pi.id].emoji, pi.x, pi.y);
